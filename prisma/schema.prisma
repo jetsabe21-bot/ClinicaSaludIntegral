@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//describe quien es el usuario del sistema 
+enum Role { 
+  RECEPTION
+  DOCTOR 
+  MANAGEMENT
+}
+// crea el modo exacto pedido en el proyecto, de forma especifica
+enum AppointmentStatus {
+  PROGRAMADA
+  COMPLETADA
+  CANCELADA
+}
+
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String  @default("0123456")
+  role     Role
+
+  @@map("users")
+}
+
+model Patient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  dateBirth DateTime @map("date_birth")
+  phone     String
+  email     String   @unique
+
+  agendas   Agenda[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id      Int      @id @default(autoincrement())
+  name    String
+  phone   String
+  email   String   @unique
+  idSpecialty Int  @map("id_specialty")
+
+  specialty   Specialty @relation(fields: [idSpecialty], references: [id])
+  agendas Agenda[]
+
+  @@map("doctors")
+}
+
+model Specialty {
+  id            Int      @id @default(autoincrement())
+  nameSpecialty String   @map("name_specialty")
+
+  agendas       Agenda[]
+  doctors       Doctor[] 
+
+  @@map("specialties")
+}
+
+model Agenda {
+  id          Int               @id @default(autoincrement())
+  appointment DateTime          @map("appointment")
+  status      AppointmentStatus @default(PROGRAMADA)
+  idDoctor    Int               @map("id_doctor")
+  idPatient   Int               @map("id_patient")
+  idSpecialty Int               @map("id_specialty")
+
+  doctor      Doctor            @relation(fields: [idDoctor], references: [id])
+  patient     Patient           @relation(fields: [idPatient], references: [id])
+  specialty   Specialty         @relation(fields: [idSpecialty], references: [id])
+
+  @@map("agenda")
+}
